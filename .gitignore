@@ -13,7 +13,7 @@ LZW/lzwFunc.o
 LZ77/lz77.o
 LZ77/lz77Func.o
 main/func.o
-main/func.o
+main/main.o
 hofman/hofman.o
 hofman/hofmanFunc.o
 hofmanArchiver
