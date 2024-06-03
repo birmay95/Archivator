@@ -29,6 +29,7 @@ private:
     int numFiles;
     char path[PATH_MAX];
     static char methodArch;
+    static char passwordProvided;
     char writeBinFile[PATH_MAX];
 
     void scanDir(const char* file, const char* nameDir) const;
@@ -51,7 +52,7 @@ public:
     Archive();
     ~Archive();
 
-    void init(char** files, int numFiles, const char* path, char methodArch, char* nameBin);
+    void init(char** files, int numFiles, const char* path, char methodArch, char* nameBin, char pswrdProv);
     void getInfo() const;
     void scanArgs() const;
     void outCompress() const;

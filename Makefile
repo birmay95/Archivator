@@ -43,5 +43,5 @@ clean:
 
 run:
 	# ./$(TARGET) --help
-	./$(TARGET) -aL --file text1.txt --path ./archive --name pack
-	./$(TARGET) -u --file ./archive/pack.archive --path ./unpack
+	# ./$(TARGET) -aL --file text6.txt --path ./archive --name pack
+	# ./$(TARGET) -u --file ./archive/pack.archive --path ./unpack

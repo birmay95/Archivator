@@ -1,12 +1,9 @@
 #include "header.h"
-#include <cstddef>
-#include <cstdio>
-#include <fstream>
-#include <unistd.h>
-#include <vector>
+
 
 const int sizeOfWR = 1048576;
 char Archive::methodArch;
+char Archive::passwordProvided;
 
 Archive::Archive() {
     files = nullptr;
@@ -22,7 +19,7 @@ Archive::~Archive() {
     free(files);
 }
 
-void Archive::init(char** files, int numFiles, const char* path, char methodArch, char* nameBin) {
+void Archive::init(char** files, int numFiles, const char* path, char methodArch, char* nameBin, char pswrdProv) {
     this->files = (char**)malloc(numFiles * sizeof(char*));
     for (int i = 0; i < numFiles; i++) {
         this->files[i] = strdup(files[i]);
@@ -33,6 +30,7 @@ void Archive::init(char** files, int numFiles, const char* path, char methodArch
     strcat(this->writeBinFile, nameBin);
     strcat(this->writeBinFile, ".archive");
     this->methodArch = methodArch;
+    this->passwordProvided = pswrdProv;
 }
 
 void Archive::getInfo() const {
@@ -260,7 +258,7 @@ void Archive::cleanup(const std::vector<std::string>& chunks) const {
     printf("Cleaning up...\n");
     int progress = 100 / chunks.size();
     for (size_t i = 0; i < chunks.size(); i++) {
-        std::remove((chunks[i] + ".Bin.bin").c_str());
+        std::remove((chunks[i] + "Bin.bin").c_str());
         std::remove((chunks[i]).c_str());
         for (int j = i * progress; j <= (int)(progress * (i + 1)); ++j) {
             showProgressBar(j);
@@ -286,6 +284,33 @@ void Archive::inCompress(const char* file, bool fromDir, const char* nameDir) co
         filename = file;
     }
     int sizeofNameFile = filename.size();
+
+    binFile.write((char*)&passwordProvided, sizeof(passwordProvided));
+    if(passwordProvided == 'y') {
+        char password[256];
+        while(1) {
+            printf("Enter the password for archivation: ");
+            strcpy(password, getpass(""));
+            printf("Confirm the password: ");
+            char passwordConfirm[256];
+            strcpy(passwordConfirm, getpass(""));
+            if(strcmp(password, passwordConfirm) != 0) {
+                printf("Passwords do not match, try again\n");
+            } else {
+                printf("Password is set\n");
+                break;
+            }
+        }
+        int sizeofPassword = strlen(password);
+
+        char key = 'K';
+        for (int i = 0; i < sizeofPassword; ++i) {
+            password[i] ^= key;
+        }
+
+        binFile.write(reinterpret_cast<char*>(&sizeofPassword), sizeof(sizeofPassword));
+        binFile.write(password, sizeofPassword);
+    }
 
     binFile.write((char*)&methodArch, sizeof(methodArch));
     binFile.write(reinterpret_cast<char*>(&sizeofNameFile), sizeof(sizeofNameFile));
@@ -471,9 +496,40 @@ void Archive::outCompress() const {
     }
     while(!binFile.eof()) {
         int sizeOfNameFIle = 0;
-        if (!binFile.read((char *)&methodArch, sizeof(methodArch))) {
+        if (!binFile.read((char *)&passwordProvided, sizeof(passwordProvided))) {
             break;
         }
+
+        if(passwordProvided == 'y') {
+            int sizeofPassword = 0;
+            binFile.read(reinterpret_cast<char*>(&sizeofPassword), sizeof(sizeofPassword));
+            char password[sizeofPassword + 1];
+            binFile.read(password, sizeofPassword);
+            password[sizeofPassword] = '\0';
+
+            char key = 'K';
+            for (int i = 0; i < sizeofPassword; ++i) {
+                password[i] ^= key;
+            }
+
+            printf("Enter the password for unarchivation (3 attempts): ");
+            char passwordEntered[256];
+            int attempt = 2;
+            while(attempt >= 0) {
+                strcpy(passwordEntered, getpass(""));
+                if(strcmp(password, passwordEntered) == 0) {
+                    break;
+                }
+                if(attempt == 0) {
+                    printf("Wrong password entered 3 times, exiting...\n");
+                    return;
+                }
+                printf("Wrong password, try again (%d attempts): ", attempt);
+                attempt--;
+            }
+        }
+
+        binFile.read((char *)&methodArch, sizeof(methodArch));
         binFile.read(reinterpret_cast<char*>(&sizeOfNameFIle), sizeof(sizeOfNameFIle));
         char nameFile[sizeOfNameFIle + 1];
         binFile.read(reinterpret_cast<char*>(&nameFile), sizeOfNameFIle);
@@ -503,8 +559,9 @@ void Archive::help() {
     printf("  -a, --archive\t\tArchive the specified file(s).\n");
     printf("  -u, --unarchive\tUnarchive the specified file(s).\n");
     printf("  -h, --hofman\t\tUse Hofman method for archivation.\n");
-    printf("  -l, --lzw\t\tUse LZW method for archivation.\n");
+    printf("  -l, --lzw\t\tUse LZW method for archivation. This methhod is default.\n");
     printf("  -L, --lz77\t\tUse LZ77 method for archivation.\n");
-    printf("  -n, --name NAME\tSpecify the name of the archive.\n");
+    printf("  -n, --name NAME\tSpecify the name of the archive. Default is 'binary'.\n");
+    printf("  -P, --password\tSpecify the password for the archive.\n");
     printf("  -H, --help\t\tDisplay this help and exit.\n");
 }

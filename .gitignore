@@ -7,7 +7,7 @@ PDF.pdf
 picture.jpeg
 text1.txt
 text2.txt
-text6.txt
+text3.txt
 LZW/lzw.o
 LZW/lzwFunc.o
 LZ77/lz77.o
@@ -20,3 +20,9 @@ hofmanArchiver
 lz77Archiver
 lzwArchiver
 archiver
+Makefile
+pic.jpeg
+pic.png
+LABS.pdf
+СхемыАилоцу.dwg
+TaskList.docx

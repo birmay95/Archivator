@@ -1,18 +1,19 @@
 #include "header.h"
 
-int main(int argc, char *argv[]) { // сделать progressingBar программы
+int main(int argc, char *argv[]) {
     char* files[100];
     int numFiles = 0;
     char archivePath[PATH_MAX] = ".";
     bool archivePathProvided = false;
     char archivation = '2';
     char methodArch = 'n';
+    char passwordProvided = 'n';
     char nameBin[40] = "binary";
     int opt;
     Archive archive;
 
     static struct option long_options[] = {
-            {"file", required_argument, 0, 'f'},
+            {"file", no_argument, 0, 'f'},
             {"path", optional_argument, 0, 'p'},
             {"archive", no_argument, 0, 'a'},
             {"unarchive", no_argument, 0, 'u'},
@@ -21,10 +22,11 @@ int main(int argc, char *argv[]) { // сделать progressingBar програ
             {"lz77", no_argument, 0, 'L'},
             {"name", required_argument, 0, 'n'},
             {"help", no_argument, 0, 'H'},
+            {"password", no_argument, 0, 'P'},
             {0, 0, 0, 0}
     };
 
-    while ((opt = getopt_long(argc, argv, "HauhlLf:p::n:", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "HauPhlLfp::n:", long_options, NULL)) != -1) {
         if(opt == 'H') {
             archive.help();
             return 0;
@@ -46,14 +48,22 @@ int main(int argc, char *argv[]) { // сделать progressingBar програ
         }
         switch (opt) {
             case 'f':
-                files[numFiles++] = optarg;
-                if(archivation == '0') {
-                    break;
+                if(archivation == '0' && argv[optind][0] != '-') {
+                    char *extension = strstr(argv[optind], ".archive");
+                    if (extension != NULL && strcmp(extension, ".archive") == 0) {
+                        files[numFiles++] = argv[optind++];
+                        break;
+                    } else {
+                        printf("Invalid file extension. Only .archive files are supported.\n");
+                        return 1;
+                    }
                 }
                 while (optind < argc && argv[optind][0] != '-') {
                     files[numFiles++] = argv[optind++];
                 }
-                optind--;
+                if(numFiles > 0) {
+                    optind--;
+                }
                 break;
             case 'p':
                 if (argv[optind]) {
@@ -72,6 +82,9 @@ int main(int argc, char *argv[]) { // сделать progressingBar програ
                 break;
             case 'u':
                 archivation = '0';
+                break;
+            case 'P':
+                passwordProvided = 'y';
                 break;
             case 'h':
                 methodArch = 'h';
@@ -99,7 +112,7 @@ int main(int argc, char *argv[]) { // сделать progressingBar програ
         return 1;
     }
 
-    archive.init(files, numFiles, archivePath, methodArch, nameBin);
+    archive.init(files, numFiles, archivePath, methodArch, nameBin, passwordProvided);
     archive.getInfo();
     if (archivation == '1') {
         archive.scanArgs();
