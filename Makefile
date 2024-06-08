@@ -35,13 +35,13 @@ $(LZW_TARGET): $(LZW_OBJS)
 $(LZ77_TARGET): $(LZ77_OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
-%.o: %.cpp $(DEPS)
+%.o: %.cpp $(DEPS) $(HOFMAN_DEPS) $(LZW_DEPS) $(LZ77_DEPS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(TARGET) $(HOFMAN_OBJS) $(HOFMAN_TARGET) $(LZW_OBJS) $(LZW_TARGET) $(LZ77_OBJS) $(LZ77_TARGET)
 
 run:
-	# ./$(TARGET) --help
-	./$(TARGET) -a --file text1.txt text3.txt --path ./archive --name pack
-	./$(TARGET) -u --file ./archive/pack.archive --path ./unpack
+	./$(TARGET) --help
+	./$(TARGET) -a -f myfile.txt -n myarchive
+	./$(TARGET) -u -f myarchive.archive
