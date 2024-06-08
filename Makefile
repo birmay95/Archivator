@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -W -std=c++17 -Wextra -Wno-unused-parameter
+CFLAGS = -Wall -W -std=c++17 -Wextra -Wno-unused-parameter -pthread
 LDFLAGS = 
 
 SRCS = main/main.cpp main/func.cpp
@@ -21,7 +21,7 @@ LZ77_TARGET = lz77Archiver
 
 .PHONY: all clean run
 
-all: $(TARGET) $(HOFMAN_TARGET) $(LZW_TARGET) $(LZ77_TARGET) run
+all: $(TARGET) $(HOFMAN_TARGET) $(LZW_TARGET) $(LZ77_TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -43,5 +43,5 @@ clean:
 
 run:
 	# ./$(TARGET) --help
-	# ./$(TARGET) -aL --file text6.txt --path ./archive --name pack
-	# ./$(TARGET) -u --file ./archive/pack.archive --path ./unpack
+	./$(TARGET) -a --file text1.txt text3.txt --path ./archive --name pack
+	./$(TARGET) -u --file ./archive/pack.archive --path ./unpack
